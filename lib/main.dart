@@ -1,26 +1,31 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 void main() => runApp(MyApp());
 
-class MyApp extends StatefulWidget {
+class MyApp extends StatelessWidget {
   @override
-  _MyAppState createState() => _MyAppState();
+  Widget build(BuildContext context) {
+    return StreamBuilder(
+      stream: bloc.darkThemeEnabled,
+      initialData: false,
+      builder: (context, snapshot) => MaterialApp(
+            debugShowCheckedModeBanner: false,
+            theme: snapshot.data ? ThemeData.dark() : ThemeData.light(),
+            home: HomePage(snapshot.data),
+          ),
+    );
+  }
 }
 
-class _MyAppState extends State<MyApp> {
+class HomePage extends StatelessWidget {
+  bool darkThemeEnabled;
 
-  bool darkThemeEnabled = false;
+  HomePage(this.darkThemeEnabled);
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: darkThemeEnabled ? ThemeData.dark() : ThemeData.light(),
-      home: home()
-    );
-  }
-
-  Widget home() {
     return Scaffold(
       appBar: AppBar(
         title: Text('Dynamic Theme'),
@@ -33,14 +38,8 @@ class _MyAppState extends State<MyApp> {
           children: <Widget>[
             ListTile(
               title: Text("Dark Theme"),
-              trailing: Switch(
-                value: darkThemeEnabled,
-                onChanged: (changedTheme) {
-                  setState(() {
-                   darkThemeEnabled = changedTheme; 
-                  });
-                },
-              ),
+              trailing:
+                  Switch(value: darkThemeEnabled, onChanged: bloc.changeTheme),
             )
           ],
         ),
@@ -48,3 +47,11 @@ class _MyAppState extends State<MyApp> {
     );
   }
 }
+
+class Bloc {
+  final _themeController = StreamController<bool>();
+  get changeTheme => _themeController.sink.add;
+  get darkThemeEnabled => _themeController.stream;
+}
+
+final bloc = Bloc();
